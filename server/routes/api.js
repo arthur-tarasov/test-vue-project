@@ -17,7 +17,7 @@ router.get('/campaigns/:skip', async (req, res) => {
         }
 
     }
-    res.send(await campaigns.find({}).skip(skip).limit(7).toArray());
+    res.send(await campaigns.find({}).skip(skip).limit(8).toArray());
 });
 
 router.get('/campaign-count', async (req, res) => {

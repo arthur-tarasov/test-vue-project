@@ -149,7 +149,8 @@
                 chips: [],
                 currentPage: 1,
                 pageSize: 8,
-                totalMedia: 0
+                totalMedia: 0,
+                step: 0
             }
         },
         async created() {
@@ -171,18 +172,18 @@
         },
         methods: {
             getCampaign: async function () {
-                const res = await axios.get('/api/campaign/'+ this.$route.params.id);
+                const res = await axios.get('/api/campaign/' + this.$route.params.id);
                 return res.data;
             },
             getMedia: async function () {
-                const res = await axios.get('/api/media',{
+                const res = await axios.get('/api/media', {
                     params: {
                         social: this.social
                     }
                 });
                 return res.data;
             },
-            async socialChange () {
+            async socialChange() {
                 this.media = await this.getMedia();
                 this.activeTab = 'pending';
                 this.totalMedia = this.media.length;
@@ -191,7 +192,7 @@
                 });
                 this.searchedMedia = this.media.slice(0, 8);
             },
-            tabsClick () {
+            tabsClick() {
 
                 let searchedMedia = this.media.filter((item, index) => {
                     if (item.status === this.activeTab) {
@@ -201,7 +202,7 @@
 
                 this.totalMedia = searchedMedia.length;
 
-                this.searchedMedia = searchedMedia.slice(0,8);
+                this.searchedMedia = searchedMedia.slice(0, 8);
                 this.currentPage = 1;
             },
             addFilter() {
@@ -214,19 +215,19 @@
                 this.filterInput = "";
                 let searchedMedia = searchByFilter(this.media, this.chips);
                 this.totalMedia = searchedMedia.length;
-                this.searchedMedia = searchedMedia.slice(0,8);
+                this.searchedMedia = searchedMedia.slice(0, 8);
             },
             onChipClose(index) {
                 this.chips.splice(index, 1);
 
                 if (this.chips.length === 0) {
-                    this.searchedMedia = this.media.slice(0,8);
+                    this.searchedMedia = this.media.slice(0, 8);
                     this.totalMedia = this.media.length;
                     this.currentPage = 1;
                 } else {
                     let searchedMedia = searchByFilter(this.media, this.chips);
                     this.totalMedia = searchedMedia.length;
-                    this.searchedMedia = searchedMedia.slice(0,8);
+                    this.searchedMedia = searchedMedia.slice(0, 8);
                 }
 
             },
@@ -237,20 +238,29 @@
                     }
                 })
 
-                this.searchedMedia = searched.slice((page-1)*this.pageSize, (page-1)*this.pageSize +this.pageSize)
+                this.searchedMedia = searched.slice((page - 1) * this.pageSize, (page - 1) * this.pageSize + this.pageSize)
             },
             setStatus(id, status) {
+                if (this.totalMedia % this.pageSize === 1 && this.currentPage === Math.ceil(this.totalMedia / this.pageSize)) {
+                    this.step = this.currentPage - 2;
+                } else {
+                    this.step = this.currentPage - 1;
+                }
+
                 let index = this.searchedMedia.findIndex(item => item.id === id);
+
                 this.searchedMedia[index].status = status;
                 let searched = this.media.filter((item, index) => {
 
-                        if (item.status === this.activeTab) {
-                            return item;
-                        }
+                    if (item.status === this.activeTab) {
+                        return item;
+                    }
 
                 });
-                this.searchedMedia = searched.slice(0,8);
+
+                this.searchedMedia = searched.slice(this.step * this.pageSize, this.step * this.pageSize + this.pageSize);
                 this.totalMedia -= 1;
+
             }
         }
     }
